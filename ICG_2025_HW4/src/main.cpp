@@ -79,6 +79,24 @@ float currentTime = 0.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// Snowflake particle system
+struct Snowflake {
+    glm::vec3 position;
+    float size;
+    float rotation;
+    float fallSpeed;
+    float swayPhase;   // for horizontal swaying
+};
+
+std::vector<Snowflake> snowflakes;
+unsigned int snowflakeVAO, snowflakeVBO;
+shader_program_t* snowflakeShader = nullptr;
+bool snowflakeEnabled = false;
+const int SNOWFLAKE_COUNT = 500;
+const float SNOW_AREA_SIZE = 600.0f;  // snowflake distribution area
+const float SNOW_HEIGHT_MAX = 300.0f;  // maximum snowflake height
+const float SNOW_HEIGHT_MIN = -100.0f; // minimum snowflake height
+
 void model_setup(){
 #if defined(__linux__) || defined(__APPLE__)
     std::string obj_path = "..\\..\\src\\asset\\obj\\Madara_Uchiha.obj";
@@ -150,6 +168,126 @@ void material_setup(){
     material.diffuse = glm::vec3(1.0);
     material.specular = glm::vec3(0.7);
     material.gloss = 50.0;
+}
+
+float randomFloat(float min, float max) {
+    return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
+}
+
+void snowflake_setup() {
+    srand(static_cast<unsigned int>(std::time(nullptr)));
+    
+    // Initialize snowflake particles
+    snowflakes.resize(SNOWFLAKE_COUNT);
+    for (int i = 0; i < SNOWFLAKE_COUNT; i++) {
+        snowflakes[i].position = glm::vec3(
+            randomFloat(-SNOW_AREA_SIZE / 2, SNOW_AREA_SIZE / 2),
+            randomFloat(SNOW_HEIGHT_MIN, SNOW_HEIGHT_MAX),
+            randomFloat(-SNOW_AREA_SIZE / 2, SNOW_AREA_SIZE / 2)
+        );
+        snowflakes[i].size = randomFloat(2.0f, 6.0f);
+        snowflakes[i].rotation = randomFloat(0.0f, 6.28318f);
+        snowflakes[i].fallSpeed = randomFloat(20.0f, 60.0f);
+        snowflakes[i].swayPhase = randomFloat(0.0f, 6.28318f);
+    }
+    
+    // Create VAO and VBO
+    glGenVertexArrays(1, &snowflakeVAO);
+    glGenBuffers(1, &snowflakeVBO);
+    
+    glBindVertexArray(snowflakeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, snowflakeVBO);
+    
+    // Each snowflake has: position(3) + size(1) + rotation(1) = 5 floats
+    glBufferData(GL_ARRAY_BUFFER, SNOWFLAKE_COUNT * 5 * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    
+    // position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    
+    // size
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    
+    // rotation
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(4 * sizeof(float)));
+    
+    glBindVertexArray(0);
+    
+    // Create shader program
+#if defined(__linux__) || defined(__APPLE__)
+    std::string shaderDir = "..\\..\\src\\shaders\\";
+#else
+    std::string shaderDir = "..\\..\\src\\shaders\\";
+#endif
+    
+    std::string vpath = shaderDir + "snowflake.vert";
+    std::string gpath = shaderDir + "snowflake.geom";
+    std::string fpath = shaderDir + "snowflake.frag";
+    
+    snowflakeShader = new shader_program_t();
+    snowflakeShader->create();
+    snowflakeShader->add_shader(vpath, GL_VERTEX_SHADER);
+    snowflakeShader->add_shader(gpath, GL_GEOMETRY_SHADER);
+    snowflakeShader->add_shader(fpath, GL_FRAGMENT_SHADER);
+    snowflakeShader->link_shader();
+}
+
+void snowflake_update() {
+    if (!snowflakeEnabled) return;
+    
+    for (int i = 0; i < SNOWFLAKE_COUNT; i++) {
+        // Snowflake falling
+        snowflakes[i].position.y -= snowflakes[i].fallSpeed * deltaTime;
+        
+        // Horizontal swaying effect
+        float sway = sin(currentTime * 2.0f + snowflakes[i].swayPhase) * 15.0f * deltaTime;
+        snowflakes[i].position.x += sway;
+        
+        // If snowflake falls below ground, respawn from top
+        if (snowflakes[i].position.y < SNOW_HEIGHT_MIN) {
+            snowflakes[i].position.y = SNOW_HEIGHT_MAX;
+            snowflakes[i].position.x = randomFloat(-SNOW_AREA_SIZE / 2, SNOW_AREA_SIZE / 2);
+            snowflakes[i].position.z = randomFloat(-SNOW_AREA_SIZE / 2, SNOW_AREA_SIZE / 2);
+        }
+    }
+    
+    // Update VBO data
+    std::vector<float> data(SNOWFLAKE_COUNT * 5);
+    for (int i = 0; i < SNOWFLAKE_COUNT; i++) {
+        data[i * 5 + 0] = snowflakes[i].position.x;
+        data[i * 5 + 1] = snowflakes[i].position.y;
+        data[i * 5 + 2] = snowflakes[i].position.z;
+        data[i * 5 + 3] = snowflakes[i].size;
+        data[i * 5 + 4] = snowflakes[i].rotation;
+    }
+    
+    glBindBuffer(GL_ARRAY_BUFFER, snowflakeVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, data.size() * sizeof(float), data.data());
+}
+
+void renderSnowflakes(const glm::mat4& view, const glm::mat4& projection) {
+    if (!snowflakeEnabled || snowflakeShader == nullptr) return;
+    
+    // Enable blending for transparency effect
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);  // Disable depth write to avoid transparency occlusion issues
+    
+    snowflakeShader->use();
+    snowflakeShader->set_uniform_value("view", view);
+    snowflakeShader->set_uniform_value("projection", projection);
+    snowflakeShader->set_uniform_value("time", currentTime);
+    
+    glBindVertexArray(snowflakeVAO);
+    glDrawArrays(GL_POINTS, 0, SNOWFLAKE_COUNT);
+    glBindVertexArray(0);
+    
+    snowflakeShader->release();
+    
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
 }
 
 void shader_setup(){
@@ -249,6 +387,7 @@ void setup(){
     camera_setup();
     cubemap_setup();
     material_setup();
+    snowflake_setup();
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
@@ -266,6 +405,8 @@ void update(){
         float yawDelta = camera.autoOrbitSpeed * deltaTime;
         applyOrbitDelta(yawDelta, 0.0f, 0.0f);
     }
+    
+    snowflake_update();
 }
 
 void render(){
@@ -303,7 +444,7 @@ void render(){
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-    shaderPrograms[shaderProgramIndex]->set_uniform_value("skybox", 1); // 把cubemap texture放到shader program，用來反射
+    shaderPrograms[shaderProgramIndex]->set_uniform_value("skybox", 1); // Set cubemap texture for reflection
 
     if(isCube)
         cubeModel->draw();
@@ -334,12 +475,15 @@ void render(){
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     cubemapShader->set_uniform_value("skybox", 0);
     
-    // cubemapVertices 通常是一個 Cube 的頂點數 (6面 * 2三角形 * 3頂點 = 36)
+    // cubemapVertices is typically the vertex count of a cube (6 faces * 2 triangles * 3 vertices = 36)
     glDrawArrays(GL_TRIANGLES, 0, 36);
     
     glBindVertexArray(0);
     
     glDepthFunc(GL_LESS);
+    
+    // Render snowflakes
+    renderSnowflakes(view, projection);
 }
 
 int main() {
@@ -387,6 +531,10 @@ int main() {
         delete shader;
     }
     delete cubemapShader;
+    delete snowflakeShader;
+    
+    glDeleteVertexArrays(1, &snowflakeVAO);
+    glDeleteBuffers(1, &snowflakeVBO);
 
     glfwTerminate();
     return 0;
@@ -444,6 +592,12 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
         shaderProgramIndex = 8;
     if( key == GLFW_KEY_9 && action == GLFW_PRESS)
         isCube = !isCube;
+    
+    // Press S key to toggle snowflake effect
+    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
+        snowflakeEnabled = !snowflakeEnabled;
+        std::cout << "Snowflake effect: " << (snowflakeEnabled ? "ON" : "OFF") << std::endl;
+    }
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
