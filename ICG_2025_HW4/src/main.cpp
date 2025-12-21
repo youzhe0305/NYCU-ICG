@@ -68,6 +68,8 @@ shader_program_t* cubemapShader;
 
 // 如果要個別obj用自己個shader，在這邊加 然後去 shader_setup_w_geo...那邊新增
 shader_program_t* portalShader = nullptr;
+shader_program_t* meteorShader = nullptr;
+shader_program_t* frogShader = nullptr;
 
 light_t light;
 material_t material;
@@ -96,15 +98,27 @@ float currentSpinSpeed = 0.0f;
 const float MAX_SPIN_SPEED = 600.0f; // 剛打開時轉超快
 const float MIN_SPIN_SPEED = 20.0f; //最後維持的速度
 // 在角色後上方顯示 可以自行更改：y = 高度 z = 角色多後面
-glm::vec3 portalPosition = glm::vec3(0.0f, 350.0f, -700.0f);
+glm::vec3 portalPosition = glm::vec3(0.0f, 500.0f, 1400.0f);
 
-// meteor init
-// Object* maradaModel = nullptr;
-// glm::mat4 maradaMatrix(1.0f);
+//隕石相關變數
+Object* meteorModel = nullptr;
+glm::mat4 meteorMatrix(1.0f);
+bool showMeteor = false;              
+float meteorTimer = 0.0f;            
+float meteorFallProgress = 0.0f;      
+float meteorExplosionProgress = 0.0f; 
+const float METEOR_FALL_DURATION = 5.0f;      
+const float METEOR_EXPLOSION_DURATION = 5.0f; // 爆炸持續時間（秒）
+const float METEOR_START_HEIGHT = 500.0f;     // 起始高度（從portal位置）
+const float METEOR_GROUND_Y = -50.0f;         // 地面高度
+glm::vec3 meteorPosition = glm::vec3(0.0f, 0.0f, 0.0f);
 
-// christmas tree init
-// Object* maradaModel = nullptr;
-// glm::mat4 maradaMatrix(1.0f);
+//青蛙相關變數
+Object* frogModel = nullptr;
+unsigned int frogTexture = 0;
+glm::mat4 frogMatrix(1.0f);
+bool showFrog = false;          
+glm::vec3 frogPosition = glm::vec3(0.0f, METEOR_GROUND_Y - 500, 0.0f); // 青蛙位置
 
 float currentTime = 0.0f;
 float deltaTime = 0.0f;
@@ -130,22 +144,68 @@ const float SNOW_HEIGHT_MIN = -200.0f; // minimum snowflake height
 
 void model_setup(){
 #if defined(__linux__) || defined(__APPLE__)
+    // std::string cube_obj_path = "../../src/asset/obj/cube.obj";
     std::string cube_obj_path = "..\\..\\src\\asset\\obj\\cube.obj";
 
+    // std::string madara_obj_path = "../../src/asset/obj/Madara_Uchiha.obj";
     std::string madara_obj_path = "..\\..\\src\\asset\\obj\\Madara_Uchiha.obj";
+    // std::string madara_texture_path = "../../src/asset/texture/_Madara_texture_main_mAIN.png";
     std::string madara_texture_path = "..\\..\\src\\asset\\texture\\_Madara_texture_main_mAIN.png";
 
+    // std::string portal_obj_path = "../../src/asset/obj/portal.obj";
     std::string portal_obj_path = "..\\..\\src\\asset\\obj\\portal.obj";
+    // std::string portal_texture_path = "../../src/asset/texture/portal.png";
     std::string portal_texture_path = "..\\..\\src\\asset\\texture\\portal.png";
+
+    // std::string meteor_obj_path = "../../src/asset/obj/Meteor_mp.obj";
+    std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
+    // std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
+    std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
+    // std::string meteor_normal_path = "../../src/asset/texture/meteor_Normal_OpenGL.png";
+    // std::string meteor_normal_path = "..\\..\\src\\asset\\texture\\meteor_Normal_OpenGL.png";
+    // std::string meteor_roughness_path = "../../src/asset/texture/meteor_Roughness.png";
+    // std::string meteor_roughness_path = "..\\..\\src\\asset\\texture\\meteor_Roughness.png";
+    // std::string meteor_emissive_path = "../../src/asset/texture/meteor_Emissive.png";
+    // std::string meteor_emissive_path = "..\\..\\src\\asset\\texture\\meteor_Emissive.png";
+    // std::string meteor_ao_path = "../../src/asset/texture/meteor_Mixed_AO.png";
+    // std::string meteor_ao_path = "..\\..\\src\\asset\\texture\\meteor_Mixed_AO.png";
+
+    // std::string frog_obj_path = "../../src/asset/obj/ranita.obj";
+    std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";
+    // std::string frog_texture_path = "../../src/asset/texture/frog.png";
+    std::string frog_texture_path = "..\\..\\src\\asset\\texture\\frog.png";
 
 #else
+    // std::string cube_obj_path = "../../src/asset/obj/cube.obj";
     std::string cube_obj_path = "..\\..\\src\\asset\\obj\\cube.obj";
     
+    // std::string madara_obj_path = "../../src/asset/obj/Madara_Uchiha.obj";
     std::string madara_obj_path = "..\\..\\src\\asset\\obj\\Madara_Uchiha.obj";
+    // std::string madara_texture_path = "../../src/asset/texture/_Madara_texture_main_mAIN.png";
     std::string madara_texture_path = "..\\..\\src\\asset\\texture\\_Madara_texture_main_mAIN.png";
 
+    // std::string portal_obj_path = "../../src/asset/obj/portal.obj";
     std::string portal_obj_path = "..\\..\\src\\asset\\obj\\portal.obj";
+    // std::string portal_texture_path = "../../src/asset/texture/portal.png";
     std::string portal_texture_path = "..\\..\\src\\asset\\texture\\portal.png";
+
+    // std::string meteor_obj_path = "../../src/asset/obj/Meteor_mp.obj";
+    std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
+    // std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
+    std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
+    // std::string meteor_normal_path = "../../src/asset/texture/meteor_Normal_OpenGL.png";
+    // std::string meteor_normal_path = "..\\..\\src\\asset\\texture\\meteor_Normal_OpenGL.png";
+    // std::string meteor_roughness_path = "../../src/asset/texture/meteor_Roughness.png";
+    // std::string meteor_roughness_path = "..\\..\\src\\asset\\texture\\meteor_Roughness.png";
+    // std::string meteor_emissive_path = "../../src/asset/texture/meteor_Emissive.png";
+    // std::string meteor_emissive_path = "..\\..\\src\\asset\\texture\\meteor_Emissive.png";
+    // std::string meteor_ao_path = "../../src/asset/texture/meteor_Mixed_AO.png";
+    // std::string meteor_ao_path = "..\\..\\src\\asset\\texture\\meteor_Mixed_AO.png";
+
+    // std::string frog_obj_path = "../../src/asset/obj/ranita.obj";  // 使用ranita.obj（青蛙模型）
+    std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";  // 使用ranita.obj（青蛙模型）
+    // std::string frog_texture_path = "../../src/asset/texture/lambert5SG_Base_Color.png";
+    std::string frog_texture_path = "..\\..\\src\\asset\\texture\\lambert5SG_Base_Color.png";
 
 #endif
     cubeModel = new Object(cube_obj_path);
@@ -167,12 +227,35 @@ void model_setup(){
     portalMatrix = glm::mat4(1.0f);
 
     // load meteor
-    // maradaModel = new Object(madara_obj_path);
-    // maradaModel->loadTexture(madara_texture_path);
+    meteorModel = new Object(meteor_obj_path);
+    meteorModel->loadTexture(meteor_base_color_path); 
 
-    // load chrismas tree
-    // maradaModel = new Object(madara_obj_path);
-    // maradaModel->loadTexture(madara_texture_path);
+    // load frog
+    frogModel = new Object(frog_obj_path);
+    
+    glGenTextures(1, &frogTexture);
+    glBindTexture(GL_TEXTURE_2D, frogTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load(frog_texture_path.c_str(), &width, &height, &nrChannels, 0);
+    if (data) {
+        GLenum format = GL_RGB;
+        if (nrChannels == 1) format = GL_RED;
+        else if (nrChannels == 3) format = GL_RGB;
+        else if (nrChannels == 4) format = GL_RGBA;
+        
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cerr << "Failed to load frog texture: " << frog_texture_path << std::endl;
+    }
+    stbi_image_free(data);
+    
 }
 
 void camera_setup(){
@@ -275,8 +358,10 @@ void snowflake_setup() {
     
     // Create shader program
 #if defined(__linux__) || defined(__APPLE__)
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #endif
     
@@ -348,10 +433,63 @@ void renderSnowflakes(const glm::mat4& view, const glm::mat4& projection) {
     glDisable(GL_BLEND);
 }
 
+// 渲染青蛙
+void renderFrog(const glm::mat4& view, const glm::mat4& projection) {
+    if (!showFrog || frogShader == nullptr || frogModel == nullptr) {
+        return;
+    }
+    
+    frogShader->use();
+    
+    // 設置shader需要的變數
+    frogShader->set_uniform_value("view", view);
+    frogShader->set_uniform_value("projection", projection);
+    frogShader->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+    frogShader->set_uniform_value("time", (float)glfwGetTime());
+    
+    // 設置光照
+    frogShader->set_uniform_value("light.position", light.position);
+    frogShader->set_uniform_value("light.ambient", light.ambient);
+    frogShader->set_uniform_value("light.diffuse", light.diffuse);
+    frogShader->set_uniform_value("light.specular", light.specular);
+    
+    // 設置材質
+    frogShader->set_uniform_value("material.ambient", glm::vec3(1.0f));
+    frogShader->set_uniform_value("material.diffuse", glm::vec3(1.0f)); // 白色，不影響貼圖顏色
+    frogShader->set_uniform_value("material.specular", glm::vec3(0.3f));
+    frogShader->set_uniform_value("material.gloss", 20.0f);
+    
+    // 綁定青蛙紋理
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, frogTexture);
+    frogShader->set_uniform_value("frogTexture", 0);
+    
+    // 渲染青蛙
+    glm::mat4 currentFrogMatrix = glm::mat4(1.0f);
+    // 調整青蛙位置，使其融入隕石中心
+    glm::vec3 adjustedFrogPosition = frogPosition + glm::vec3(0.0f, -70.0f, 0.0f);
+    currentFrogMatrix = glm::translate(currentFrogMatrix, adjustedFrogPosition);
+    currentFrogMatrix = glm::rotate(currentFrogMatrix, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    
+    // 青蛙生長動畫
+    float frogScale = 0.1f;
+    if (meteorExplosionProgress > 0.0f) {
+        frogScale = glm::mix(0.1f, 15.0f, meteorExplosionProgress);
+    }
+    currentFrogMatrix = glm::scale(currentFrogMatrix, glm::vec3(frogScale));
+    
+    frogShader->set_uniform_value("model", currentFrogMatrix);
+    frogModel->draw();
+    
+    frogShader->release();
+}
+
 void shader_setup(){
 #if defined(__linux__) || defined(__APPLE__)
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #endif
 
@@ -374,8 +512,10 @@ void shader_setup(){
 
 void shader_setup_w_geometry_shader(){
     #if defined(__linux__) || defined(__APPLE__)
+        // std::string shaderDir = "../../src/shaders/";
         std::string shaderDir = "..\\..\\src\\shaders\\";
     #else
+        // std::string shaderDir = "../../src/shaders/";
         std::string shaderDir = "..\\..\\src\\shaders\\";
     #endif
 
@@ -413,17 +553,39 @@ void shader_setup_w_geometry_shader(){
     portalShader->add_shader(portal_fpath, GL_FRAGMENT_SHADER);
     portalShader->link_shader();
 
-    // meteor的shader...
+    // meteor的shader - 隕石爆炸效果shader（使用geometry shader）
+    std::string meteor_vpath = shaderDir + "meteor.vert";
+    std::string meteor_gpath = shaderDir + "meteor.geom";
+    std::string meteor_fpath = shaderDir + "meteor.frag";
 
-    // christmas tree的shader...
+    meteorShader = new shader_program_t();
+    meteorShader->create();
+    meteorShader->add_shader(meteor_vpath, GL_VERTEX_SHADER);
+    meteorShader->add_shader(meteor_gpath, GL_GEOMETRY_SHADER);
+    meteorShader->add_shader(meteor_fpath, GL_FRAGMENT_SHADER);
+    meteorShader->link_shader();
+
+    // frog的shader
+    std::string frog_vpath = shaderDir + "frog.vert";
+    std::string frog_fpath = shaderDir + "frog.frag";
+
+    frogShader = new shader_program_t();
+    frogShader->create();
+    frogShader->add_shader(frog_vpath, GL_VERTEX_SHADER);
+    frogShader->add_shader(frog_fpath, GL_FRAGMENT_SHADER);
+    frogShader->link_shader();
 }
 
 void cubemap_setup(){
 #if defined(__linux__) || defined(__APPLE__)
+    // std::string cubemapDir = "../../src/asset/texture/skybox/";
     std::string cubemapDir = "..\\..\\src\\asset\\texture\\skybox\\";
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
+    // std::string cubemapDir = "../../src/asset/texture/skybox/";
     std::string cubemapDir = "..\\..\\src\\asset\\texture\\skybox\\";
+    // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
 #endif
 
@@ -474,6 +636,61 @@ void setup(){
     glCullFace(GL_BACK);
 }
 
+//meteor animation
+void updateMeteorAnimation() {
+    if (!showMeteor) return;
+
+    meteorTimer += deltaTime;
+
+    if (meteorTimer < METEOR_FALL_DURATION) {
+        if (!showFrog) {
+            showFrog = true;
+        }
+        
+        meteorFallProgress = meteorTimer / METEOR_FALL_DURATION;
+        
+        float startY = portalPosition.y;
+        float endY = METEOR_GROUND_Y;
+
+        float t = meteorFallProgress;
+        float height = startY + (endY - startY) * t * t;
+        
+        meteorPosition = glm::vec3(
+            portalPosition.x,
+            height - 100.0f,
+            portalPosition.z - 80.0f
+        );
+        
+        // 掉落時隕石旋轉
+        meteorMatrix = glm::mat4(1.0f);
+        meteorMatrix = glm::translate(meteorMatrix, meteorPosition);
+        meteorMatrix = glm::rotate(meteorMatrix, meteorTimer * 3.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(100.0f));
+        
+        frogPosition = meteorPosition;
+        
+        meteorExplosionProgress = 0.0f;
+    }
+    //爆炸階段
+    else if (meteorTimer < METEOR_FALL_DURATION + METEOR_EXPLOSION_DURATION) {
+        float explosionTimer = meteorTimer - METEOR_FALL_DURATION;
+        meteorExplosionProgress = explosionTimer / METEOR_EXPLOSION_DURATION;
+        
+        meteorPosition.y = METEOR_GROUND_Y;
+        
+        meteorMatrix = glm::mat4(1.0f);
+        meteorMatrix = glm::translate(meteorMatrix, meteorPosition);
+        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(100.0f));
+        
+        frogPosition = meteorPosition;
+    }
+    //動畫結束
+    else {
+        showMeteor = false;
+        meteorExplosionProgress = 1.0f;
+    }
+}
+
 // 處理portal animation
 void updatePortalAnimation() {
     if (showPortal) {
@@ -516,6 +733,9 @@ void update(){
 
     // 同時更新portal位置 選轉 大小等等資料
     updatePortalAnimation();
+    
+    // 更新隕石動畫
+    updateMeteorAnimation();
 }
 
 void render(){
@@ -582,7 +802,7 @@ void render(){
         currentPortalMatrix = glm::translate(currentPortalMatrix, portalPosition);
 
         // 傾斜portal
-        currentPortalMatrix = glm::rotate(currentPortalMatrix, glm::radians(135.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        currentPortalMatrix = glm::rotate(currentPortalMatrix, glm::radians(-160.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
         // rotation
         currentPortalMatrix = glm::rotate(currentPortalMatrix, glm::radians(portalRotation), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -598,6 +818,60 @@ void render(){
         portalShader->release();
     }
 
+    // 渲染隕石（如果觸發了隕石動畫）
+    if (showMeteor && meteorShader != nullptr) {
+        meteorShader->use();
+        
+        // 設置shader需要的變數
+        meteorShader->set_uniform_value("view", view);
+        meteorShader->set_uniform_value("projection", projection);
+        meteorShader->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+        meteorShader->set_uniform_value("time", (float)glfwGetTime());
+        meteorShader->set_uniform_value("explosionProgress", meteorExplosionProgress);
+        
+        // 設置光照
+        meteorShader->set_uniform_value("light.position", light.position);
+        meteorShader->set_uniform_value("light.ambient", light.ambient);
+        meteorShader->set_uniform_value("light.diffuse", light.diffuse);
+        meteorShader->set_uniform_value("light.specular", light.specular);
+        
+        meteorShader->set_uniform_value("model", meteorMatrix);
+        
+        glActiveTexture(GL_TEXTURE0);
+        meteorShader->set_uniform_value("objectTexture", 0);
+        meteorModel->draw();
+        
+        meteorShader->release();
+    }
+
+    // 先shade青蛙，使其被隕石蓋掉
+    renderFrog(view, projection);
+    
+    if (showMeteor && meteorShader && meteorModel && meteorTimer < METEOR_FALL_DURATION) {
+        meteorShader->use();
+        meteorShader->set_uniform_value("view", view);
+        meteorShader->set_uniform_value("projection", projection);
+        meteorShader->set_uniform_value("viewPos", camera.position);
+        meteorShader->set_uniform_value("explosionProgress", 0.0f);
+        
+        meteorShader->set_uniform_value("material.ambient", material.ambient);
+        meteorShader->set_uniform_value("material.diffuse", material.diffuse);
+        meteorShader->set_uniform_value("material.specular", material.specular);
+        meteorShader->set_uniform_value("material.gloss", material.gloss);
+        
+        meteorShader->set_uniform_value("light.position", light.position);
+        meteorShader->set_uniform_value("light.ambient", light.ambient);
+        meteorShader->set_uniform_value("light.diffuse", light.diffuse);
+        meteorShader->set_uniform_value("light.specular", light.specular);
+        
+        meteorShader->set_uniform_value("model", meteorMatrix);
+        
+        glActiveTexture(GL_TEXTURE0);
+        meteorShader->set_uniform_value("objectTexture", 0);
+        meteorModel->draw();
+        
+        meteorShader->release();
+    }
 
     shaderPrograms[shaderProgramIndex]->release();
 
@@ -677,11 +951,22 @@ int main() {
     delete maradaModel;
     delete portalModel; 
     delete cubeModel;
+    delete meteorModel;
+    delete frogModel;
+    
     for (auto shader : shaderPrograms) {
         delete shader;
     }
     delete cubemapShader;
     delete snowflakeShader;
+    delete portalShader;
+    delete meteorShader;
+    delete frogShader;
+    
+    // 清理青蛙紋理
+    if (frogTexture != 0) {
+        glDeleteTextures(1, &frogTexture);
+    }
     
     glDeleteVertexArrays(1, &snowflakeVAO);
     glDeleteBuffers(1, &snowflakeVBO);
@@ -730,6 +1015,17 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
 
     if (key == GLFW_KEY_N && action == GLFW_PRESS)
         snowflakeEnabled = !snowflakeEnabled;
+
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+        // 按下M鍵觸發隕石從portal掉落
+        if (!showMeteor) {
+            showMeteor = true;
+            meteorTimer = 0.0f;
+            meteorFallProgress = 0.0f;
+            meteorExplosionProgress = 0.0f;
+            showFrog = false;
+        }
+    }
 
     if (key == GLFW_KEY_0 && (action == GLFW_REPEAT || action == GLFW_PRESS)) 
         shaderProgramIndex = 0;

@@ -1,0 +1,17 @@
+# Material file for ranita.obj (青蛙模型，不含地板)
+
+# 青蛙本体材质
+newmtl lambert5SG
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.3 0.3 0.3
+Ns 20.0
+map_Kd lambert5SG_Base_Color.png
+
+# 圣诞树/星星装饰材质
+newmtl initialShadingGroup
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.3 0.3 0.3
+Ns 20.0
+map_Kd initialShadingGroup_Base_Color.png
