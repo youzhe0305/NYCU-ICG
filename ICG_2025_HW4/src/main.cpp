@@ -123,10 +123,10 @@ std::vector<Snowflake> snowflakes;
 unsigned int snowflakeVAO, snowflakeVBO;
 shader_program_t* snowflakeShader = nullptr;
 bool snowflakeEnabled = false;
-const int SNOWFLAKE_COUNT = 500;
-const float SNOW_AREA_SIZE = 600.0f;  // snowflake distribution area
-const float SNOW_HEIGHT_MAX = 300.0f;  // maximum snowflake height
-const float SNOW_HEIGHT_MIN = -100.0f; // minimum snowflake height
+const int SNOWFLAKE_COUNT = 2000;
+const float SNOW_AREA_SIZE = 1200.0f;  // snowflake distribution area
+const float SNOW_HEIGHT_MAX = 600.0f;  // maximum snowflake height
+const float SNOW_HEIGHT_MIN = -200.0f; // minimum snowflake height
 
 void model_setup(){
 #if defined(__linux__) || defined(__APPLE__)
@@ -511,14 +511,11 @@ void update(){
         float yawDelta = camera.autoOrbitSpeed * deltaTime;
         applyOrbitDelta(yawDelta, 0.0f, 0.0f);
     }
-<<<<<<< HEAD
     
     snowflake_update();
-=======
 
     // 同時更新portal位置 選轉 大小等等資料
     updatePortalAnimation();
->>>>>>> 807cfdb80bf36bd0b70a7a3d987647cd8dc19590
 }
 
 void render(){
@@ -558,10 +555,11 @@ void render(){
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
     shaderPrograms[shaderProgramIndex]->set_uniform_value("skybox", 1); // Set cubemap texture for reflection
 
-    // if(isCube)
-    //     cubeModel->draw();
-    // else
-    //     maradaModel->draw();
+    // Draw character model
+    if(isCube)
+        cubeModel->draw();
+    else
+        maradaModel->draw();
 
 
     // 如果觸發顯示portal -> draw
@@ -730,34 +728,13 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
         showPortal = !showPortal;
 
+    if (key == GLFW_KEY_N && action == GLFW_PRESS)
+        snowflakeEnabled = !snowflakeEnabled;
+
     if (key == GLFW_KEY_0 && (action == GLFW_REPEAT || action == GLFW_PRESS)) 
         shaderProgramIndex = 0;
     if (key == GLFW_KEY_1 && (action == GLFW_REPEAT || action == GLFW_PRESS)) 
         shaderProgramIndex = 1;
-<<<<<<< HEAD
-    if (key == GLFW_KEY_2 && (action == GLFW_REPEAT || action == GLFW_PRESS)) 
-        shaderProgramIndex = 2;
-    if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-        shaderProgramIndex = 3;
-    if (key == GLFW_KEY_4 && action == GLFW_PRESS)
-        shaderProgramIndex = 4;
-    if (key == GLFW_KEY_5 && action == GLFW_PRESS)
-        shaderProgramIndex = 5;
-    if (key == GLFW_KEY_6 && action == GLFW_PRESS)
-        shaderProgramIndex = 6;
-    if (key == GLFW_KEY_7 && action == GLFW_PRESS)
-        shaderProgramIndex = 7;
-    if (key == GLFW_KEY_8 && action == GLFW_PRESS)
-        shaderProgramIndex = 8;
-    if( key == GLFW_KEY_9 && action == GLFW_PRESS)
-        isCube = !isCube;
-    
-    // Press S key to toggle snowflake effect
-    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
-        snowflakeEnabled = !snowflakeEnabled;
-        std::cout << "Snowflake effect: " << (snowflakeEnabled ? "ON" : "OFF") << std::endl;
-    }
-=======
 
 
     // 暫時移除下面的 不然按到會crash
@@ -778,7 +755,6 @@ void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods
     //     shaderProgramIndex = 8;
     // if( key == GLFW_KEY_9 && action == GLFW_PRESS)
     //     isCube = !isCube;
->>>>>>> 807cfdb80bf36bd0b70a7a3d987647cd8dc19590
 }
 
 void framebufferSizeCallback(GLFWwindow *window, int width, int height) {
