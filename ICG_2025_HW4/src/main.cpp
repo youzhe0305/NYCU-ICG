@@ -51,6 +51,10 @@ struct camera_t{
     float maxOrbitPitch;
     bool enableAutoOrbit;
     float autoOrbitSpeed;
+    
+    // Free camera movement
+    float moveSpeed;
+    float rotateSpeed;
 };
 
 // settings
@@ -256,20 +260,33 @@ void camera_setup(){
     camera.target = glm::vec3(0.0f);
     camera.enableAutoOrbit = false; // 關掉自動旋轉
     camera.autoOrbitSpeed = 20.0f;
+    
+    camera.moveSpeed = 500.0f;
+    camera.rotateSpeed = 100.0f;
+    
+    glm::vec3 characterPos = glm::vec3(0.0f, 50.0f, 50.0f);
+    float cameraDistance = 300.0f;
+    float cameraHeight = 100.0f;
+    camera.position = characterPos + glm::vec3(0.0f, cameraHeight, cameraDistance);
+    
+    camera.yaw = -90.0f;
+    camera.pitch = -10.0f;
 
     updateCamera();
 }
 
 void updateCamera(){
+    // Calculate camera direction vectors based on yaw and pitch (free camera style)
     float yawRad = glm::radians(camera.yaw);
     float pitchRad = glm::radians(camera.pitch);
-    float cosPitch = cos(pitchRad);
-
-    camera.position.x = camera.target.x + camera.radius * cosPitch * cos(yawRad);
-    camera.position.y = camera.target.y + camera.radius * sin(pitchRad);
-    camera.position.z = camera.target.z + camera.radius * cosPitch * sin(yawRad);
-
-    camera.front = glm::normalize(camera.target - camera.position);
+    
+    // Calculate front vector
+    camera.front.x = cos(yawRad) * cos(pitchRad);
+    camera.front.y = sin(pitchRad);
+    camera.front.z = sin(yawRad) * cos(pitchRad);
+    camera.front = glm::normalize(camera.front);
+    
+    // Calculate right and up vectors
     camera.right = glm::normalize(glm::cross(camera.front, camera.worldUp));
     camera.up = glm::normalize(glm::cross(camera.right, camera.front));
 }
@@ -428,7 +445,7 @@ void renderFrog(const glm::mat4& view, const glm::mat4& projection) {
     // 設置shader需要的變數
     frogShader->set_uniform_value("view", view);
     frogShader->set_uniform_value("projection", projection);
-    frogShader->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+    frogShader->set_uniform_value("viewPos", camera.position);
     frogShader->set_uniform_value("time", (float)glfwGetTime());
     
     // 設置光照
@@ -726,7 +743,7 @@ void render(){
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 view = glm::lookAt(camera.position - glm::vec3(0.0f, 0.2f, 0.1f), camera.position + camera.front, camera.up);
+    glm::mat4 view = glm::lookAt(camera.position, camera.position + camera.front, camera.up);
     float aspect = (SCR_HEIGHT > 0) ? (float)SCR_WIDTH / (float)SCR_HEIGHT : 1.0f;
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), aspect, 0.1f, 5000.0f); // 1000 -> 5000避免被obj被卡掉
 
@@ -735,7 +752,7 @@ void render(){
     shaderPrograms[shaderProgramIndex]->set_uniform_value("model", maradaMatrix);
     shaderPrograms[shaderProgramIndex]->set_uniform_value("view", view);
     shaderPrograms[shaderProgramIndex]->set_uniform_value("projection", projection);
-    shaderPrograms[shaderProgramIndex]->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+    shaderPrograms[shaderProgramIndex]->set_uniform_value("viewPos", camera.position);
 
     shaderPrograms[shaderProgramIndex]->set_uniform_value("time", (float)glfwGetTime());
     // TODO: set additional uniform value for shader program
@@ -777,7 +794,7 @@ void render(){
         // 傳該用的variables進去
         portalShader->set_uniform_value("view", view);
         portalShader->set_uniform_value("projection", projection);
-        portalShader->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+        portalShader->set_uniform_value("viewPos", camera.position);
         portalShader->set_uniform_value("time", (float)glfwGetTime());
         portalShader->set_uniform_value("progress", currentProgress);
         // transformation
@@ -809,7 +826,7 @@ void render(){
         // 設置shader需要的變數
         meteorShader->set_uniform_value("view", view);
         meteorShader->set_uniform_value("projection", projection);
-        meteorShader->set_uniform_value("viewPos", camera.position - glm::vec3(0.0f, 0.2f, 0.1f));
+        meteorShader->set_uniform_value("viewPos", camera.position);
         meteorShader->set_uniform_value("time", (float)glfwGetTime());
         meteorShader->set_uniform_value("explosionProgress", meteorExplosionProgress);
         
@@ -963,27 +980,54 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    glm::vec2 orbitInput(0.0f);
-    float zoomInput = 0.0f;
-
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        orbitInput.x += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        orbitInput.x -= 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        orbitInput.y += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        orbitInput.y -= 1.0f;
+    // Free camera movement
+    glm::vec3 moveDirection(0.0f);
+    
+    // Forward/Backward (W/S)
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        zoomInput -= 1.0f;
+        moveDirection += camera.front;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        zoomInput += 1.0f;
-
-    if (orbitInput.x != 0.0f || orbitInput.y != 0.0f || zoomInput != 0.0f) {
-        float yawDelta = orbitInput.x * camera.orbitRotateSpeed * deltaTime;
-        float pitchDelta = orbitInput.y * camera.orbitRotateSpeed * deltaTime;
-        float radiusDelta = zoomInput * camera.orbitZoomSpeed * deltaTime;
-        applyOrbitDelta(yawDelta, pitchDelta, radiusDelta);
+        moveDirection -= camera.front;
+    
+    // Left/Right (A/D)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        moveDirection -= camera.right;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        moveDirection += camera.right;
+    
+    // Up/Down (Space/Shift)
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        moveDirection += camera.worldUp;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        moveDirection -= camera.worldUp;
+    
+    // Apply movement
+    if (glm::length(moveDirection) > 0.0f) {
+        moveDirection = glm::normalize(moveDirection);
+        camera.position += moveDirection * camera.moveSpeed * deltaTime;
+    }
+    
+    // Camera rotation with arrow keys or Q/E
+    float yawDelta = 0.0f;
+    float pitchDelta = 0.0f;
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        yawDelta -= 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        yawDelta += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+        pitchDelta += 1.0f;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        pitchDelta -= 1.0f;
+    
+    if (yawDelta != 0.0f || pitchDelta != 0.0f) {
+        camera.yaw += yawDelta * camera.rotateSpeed * deltaTime;
+        camera.pitch += pitchDelta * camera.rotateSpeed * deltaTime;
+        
+        // Clamp pitch to avoid gimbal lock
+        camera.pitch = glm::clamp(camera.pitch, -89.0f, 89.0f);
+        
+        updateCamera();
     }
 }
 
