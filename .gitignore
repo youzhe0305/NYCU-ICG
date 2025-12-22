@@ -4,10 +4,3 @@ build
 *.mp4
 .vscode
 40-madara-uchiha
-
-# Large texture files
-ICG_2025_HW4/src/asset/texture/meteor_Normal_OpenGL.png
-ICG_2025_HW4/src/asset/texture/meteor_Base_Color.png
-ICG_2025_HW4/src/asset/texture/meteor_Emissive.png
-ICG_2025_HW4/src/asset/texture/meteor_Roughness.png
-ICG_2025_HW4/src/asset/texture/meteor_Mixed_AO.png
