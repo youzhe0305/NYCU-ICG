@@ -95,7 +95,7 @@ float currentProgress = 0.0f;
 const float PORTAL_ANIMATION_DURATION = 6.0f;
 
 float portalScale = 0.0f;
-const float PORTAL_TARGET_SCALE = 800.0f;
+const float PORTAL_TARGET_SCALE = 1000.0f;
 
 float portalRotation = 0.0f;
 float currentSpinSpeed = 0.0f;
@@ -666,7 +666,7 @@ void updateMeteorAnimation() {
         meteorMatrix = glm::mat4(1.0f);
         meteorMatrix = glm::translate(meteorMatrix, meteorPosition);
         meteorMatrix = glm::rotate(meteorMatrix, meteorTimer * 3.0f, glm::vec3(1.0f, 1.0f, 0.0f));
-        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(100.0f));
+        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(300.0f));
         
         frogPosition = meteorPosition;
         
@@ -681,7 +681,7 @@ void updateMeteorAnimation() {
         
         meteorMatrix = glm::mat4(1.0f);
         meteorMatrix = glm::translate(meteorMatrix, meteorPosition);
-        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(100.0f));
+        meteorMatrix = glm::scale(meteorMatrix, glm::vec3(300.0f));
         
         frogPosition = meteorPosition;
     }
