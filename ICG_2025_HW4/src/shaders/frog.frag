@@ -31,14 +31,12 @@ void main()
     vec4 texColor = texture(frogTexture, TexCoords);
     vec3 baseColor = texColor.rgb;
     
-    // 如果没有有效的纹理，使用默认绿色
     if (texColor.a < 0.1) {
         baseColor = vec3(0.2, 0.6, 0.3);
     }
     
     vec3 norm = normalize(Normal);
     
-    // 基本光照计算 - 增加环境光和漫反射让青蛙更亮
     vec3 ambient = light.ambient * material.ambient * 0.7;
     
     vec3 lightDir = normalize(light.position - FragPos);
@@ -51,8 +49,7 @@ void main()
     vec3 specular = light.specular * material.specular * spec * 0.4;
     
     vec3 result = (ambient + diffuse + specular) * baseColor;
-    
-    // 增加整体亮度
+
     result *= 1.3;
     
     FragColor = vec4(result, 1.0);

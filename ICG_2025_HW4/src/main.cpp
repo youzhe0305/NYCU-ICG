@@ -148,28 +148,28 @@ const float SNOW_HEIGHT_MIN = -200.0f; // minimum snowflake height
 
 void model_setup(){
 #if defined(__linux__) || defined(__APPLE__)
-    // std::string cube_obj_path = "../../src/asset/obj/cube.obj";
-    std::string cube_obj_path = "..\\..\\src\\asset\\obj\\cube.obj";
+    std::string cube_obj_path = "../../src/asset/obj/cube.obj";
+    //std::string cube_obj_path = "..\\..\\src\\asset\\obj\\cube.obj";
 
-    // std::string madara_obj_path = "../../src/asset/obj/Madara_Uchiha.obj";
-    std::string madara_obj_path = "..\\..\\src\\asset\\obj\\Madara_Uchiha.obj";
-    // std::string madara_texture_path = "../../src/asset/texture/_Madara_texture_main_mAIN.png";
-    std::string madara_texture_path = "..\\..\\src\\asset\\texture\\_Madara_texture_main_mAIN.png";
+    std::string madara_obj_path = "../../src/asset/obj/Madara_Uchiha.obj";
+    //std::string madara_obj_path = "..\\..\\src\\asset\\obj\\Madara_Uchiha.obj";
+    std::string madara_texture_path = "../../src/asset/texture/_Madara_texture_main_mAIN.png";
+    //std::string madara_texture_path = "..\\..\\src\\asset\\texture\\_Madara_texture_main_mAIN.png";
 
-    // std::string portal_obj_path = "../../src/asset/obj/portal.obj";
-    std::string portal_obj_path = "..\\..\\src\\asset\\obj\\portal.obj";
-    // std::string portal_texture_path = "../../src/asset/texture/portal.png";
-    std::string portal_texture_path = "..\\..\\src\\asset\\texture\\portal.png";
+    std::string portal_obj_path = "../../src/asset/obj/portal.obj";
+    //std::string portal_obj_path = "..\\..\\src\\asset\\obj\\portal.obj";
+    std::string portal_texture_path = "../../src/asset/texture/portal.png";
+    //std::string portal_texture_path = "..\\..\\src\\asset\\texture\\portal.png";
 
-    // std::string meteor_obj_path = "../../src/asset/obj/Meteor_mp.obj";
-    std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
-    // std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
-    std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
+    std::string meteor_obj_path = "../../src/asset/obj/Meteor_mp.obj";
+    //std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
+    std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
+    //std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
 
-    // std::string frog_obj_path = "../../src/asset/obj/ranita.obj";
-    std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";
-    // std::string frog_texture_path = "../../src/asset/texture/frog.png";
-    std::string frog_texture_path = "..\\..\\src\\asset\\texture\\frog.png";
+    std::string frog_obj_path = "../../src/asset/obj/ranita.obj";
+    //std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";
+    std::string frog_texture_path = "../../src/asset/texture/frog.png";
+    //std::string frog_texture_path = "..\\..\\src\\asset\\texture\\frog.png";
 
 #else
     // std::string cube_obj_path = "../../src/asset/obj/cube.obj";
@@ -359,8 +359,8 @@ void snowflake_setup() {
     
     // Create shader program
 #if defined(__linux__) || defined(__APPLE__)
-    // std::string shaderDir = "../../src/shaders/";
-    std::string shaderDir = "..\\..\\src\\shaders\\";
+    std::string shaderDir = "../../src/shaders/";
+    //std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
     // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
@@ -487,8 +487,8 @@ void renderFrog(const glm::mat4& view, const glm::mat4& projection) {
 
 void shader_setup(){
 #if defined(__linux__) || defined(__APPLE__)
-    // std::string shaderDir = "../../src/shaders/";
-    std::string shaderDir = "..\\..\\src\\shaders\\";
+    std::string shaderDir = "../../src/shaders/";
+    //std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
     // std::string shaderDir = "../../src/shaders/";
     std::string shaderDir = "..\\..\\src\\shaders\\";
@@ -513,8 +513,8 @@ void shader_setup(){
 
 void shader_setup_w_geometry_shader(){
     #if defined(__linux__) || defined(__APPLE__)
-        // std::string shaderDir = "../../src/shaders/";
-        std::string shaderDir = "..\\..\\src\\shaders\\";
+        std::string shaderDir = "../../src/shaders/";
+        //std::string shaderDir = "..\\..\\src\\shaders\\";
     #else
         // std::string shaderDir = "../../src/shaders/";
         std::string shaderDir = "..\\..\\src\\shaders\\";
@@ -579,10 +579,10 @@ void shader_setup_w_geometry_shader(){
 
 void cubemap_setup(){
 #if defined(__linux__) || defined(__APPLE__)
-    // std::string cubemapDir = "../../src/asset/texture/skybox/";
-    std::string cubemapDir = "..\\..\\src\\asset\\texture\\skybox\\";
-    // std::string shaderDir = "../../src/shaders/";
-    std::string shaderDir = "..\\..\\src\\shaders\\";
+    std::string cubemapDir = "../../src/asset/texture/skybox/";
+    //std::string cubemapDir = "..\\..\\src\\asset\\texture\\skybox\\";
+    std::string shaderDir = "../../src/shaders/";
+    //std::string shaderDir = "..\\..\\src\\shaders\\";
 #else
     // std::string cubemapDir = "../../src/asset/texture/skybox/";
     std::string cubemapDir = "..\\..\\src\\asset\\texture\\skybox\\";
