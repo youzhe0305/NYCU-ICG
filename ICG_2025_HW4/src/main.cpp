@@ -161,14 +161,6 @@ void model_setup(){
     std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
     // std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
     std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
-    // std::string meteor_normal_path = "../../src/asset/texture/meteor_Normal_OpenGL.png";
-    // std::string meteor_normal_path = "..\\..\\src\\asset\\texture\\meteor_Normal_OpenGL.png";
-    // std::string meteor_roughness_path = "../../src/asset/texture/meteor_Roughness.png";
-    // std::string meteor_roughness_path = "..\\..\\src\\asset\\texture\\meteor_Roughness.png";
-    // std::string meteor_emissive_path = "../../src/asset/texture/meteor_Emissive.png";
-    // std::string meteor_emissive_path = "..\\..\\src\\asset\\texture\\meteor_Emissive.png";
-    // std::string meteor_ao_path = "../../src/asset/texture/meteor_Mixed_AO.png";
-    // std::string meteor_ao_path = "..\\..\\src\\asset\\texture\\meteor_Mixed_AO.png";
 
     // std::string frog_obj_path = "../../src/asset/obj/ranita.obj";
     std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";
@@ -193,19 +185,11 @@ void model_setup(){
     std::string meteor_obj_path = "..\\..\\src\\asset\\obj\\Meteor_mp.obj";
     // std::string meteor_base_color_path = "../../src/asset/texture/meteor_Base_Color.png";
     std::string meteor_base_color_path = "..\\..\\src\\asset\\texture\\meteor_Base_Color.png";
-    // std::string meteor_normal_path = "../../src/asset/texture/meteor_Normal_OpenGL.png";
-    // std::string meteor_normal_path = "..\\..\\src\\asset\\texture\\meteor_Normal_OpenGL.png";
-    // std::string meteor_roughness_path = "../../src/asset/texture/meteor_Roughness.png";
-    // std::string meteor_roughness_path = "..\\..\\src\\asset\\texture\\meteor_Roughness.png";
-    // std::string meteor_emissive_path = "../../src/asset/texture/meteor_Emissive.png";
-    // std::string meteor_emissive_path = "..\\..\\src\\asset\\texture\\meteor_Emissive.png";
-    // std::string meteor_ao_path = "../../src/asset/texture/meteor_Mixed_AO.png";
-    // std::string meteor_ao_path = "..\\..\\src\\asset\\texture\\meteor_Mixed_AO.png";
 
     // std::string frog_obj_path = "../../src/asset/obj/ranita.obj";  // 使用ranita.obj（青蛙模型）
     std::string frog_obj_path = "..\\..\\src\\asset\\obj\\ranita.obj";  // 使用ranita.obj（青蛙模型）
-    // std::string frog_texture_path = "../../src/asset/texture/lambert5SG_Base_Color.png";
-    std::string frog_texture_path = "..\\..\\src\\asset\\texture\\lambert5SG_Base_Color.png";
+    // std::string frog_texture_path = "../../src/asset/texture/frog.png";
+    std::string frog_texture_path = "..\\..\\src\\asset\\texture\\frog.png";
 
 #endif
     cubeModel = new Object(cube_obj_path);
